@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title> Space Rescue Mission - ภารกิจกู้ภัยอวกาศ (แนวคิดเชิงคำนวณ ม.1)</title>
+    
+    <!-- Google Fonts: Kanit & Sarabun -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        kanit: ['Kanit', 'sans-serif'],
+                        sarabun: ['Sarabun', 'sans-serif'],
+                    },
+                    colors: {
+                        space: {
+                            dark: '#030712',
+                            card: '#0f172a',
+                            cyan: '#06b6d4',
+                            neonBlue: '#3b82f6',
+                            purple: '#8b5cf6',
+                            pink: '#ec4899',
+                            yellow: '#f59e0b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #030712;
+            color: #f8fafc;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Kanit', sans-serif;
+        }
+
+        /* Animated Starry Space Background */
+        .stars-bg {
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--duration) infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* Glassmorphism Sci-Fi Panels */
+        .space-glass {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.3);
+        }
+
+        .space-glass-gold {
+            background: rgba(30, 27, 75, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            box-shadow: 0 10px 30px -10px rgba(245, 158, 11, 0.3);
+        }
+
+        /* Glowing Pulse Effect */
+        @keyframes pulseGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6)); }
+            50% { filter: drop-shadow(0 0 20px rgba(6, 182, 212, 1)); }
+        }
+        .glow-pulse {
+            animation: pulseGlow 2.5s infinite ease-in-out;
+        }
+
+        /* Floating effect */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+            animation: floatSlow 4s ease-in-out infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen text-slate-100 flex flex-col justify-between select-none">
+
+    <!-- STARRY BACKGROUND -->
+    <div id="stars-container" class="stars-bg"></div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="relative z-10 max-w-4xl mx-auto w-full px-4 py-4 md:py-6 flex-1 flex flex-col justify-between">
+
+        <!-- HEADER HUD -->
+        <header class="space-glass rounded-2xl p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <!-- Title Banner -->
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-purple-600 flex items-center justify-center text-2xl shadow-lg shadow-blue-500/30 animate-pulse">
+                    🚀
+                </div>
+                <div>
+                    <h1 class="font-heading font-extrabold text-lg sm:text-xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-200 to-purple-300">
+                        SPACE RESCUE MISSION
+                    </h1>
+                    <p class="text-xs text-cyan-300 font-sarabun">ภารกิจกู้ภัยอวกาศ • วิทยาการคำนวณ ม.1</p>
+                </div>
+            </div>
+
+            <!-- Energy Bar & Level Indicator -->
+            <div class="w-full sm:w-auto flex-1 max-w-xs space-y-1">
+                <div class="flex justify-between text-xs font-heading font-bold">
+                    <span id="hud-level-title" class="text-cyan-300">ด่านที่ 1/5: Decomposition</span>
+                    <span id="hud-energy-text" class="text-yellow-400">พลังงาน 0%</span>
+                </div>
+                <div class="w-full h-3.5 bg-slate-900/90 rounded-full p-0.5 border border-blue-500/40 relative overflow-hidden">
+                    <div id="hud-energy-bar" class="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full transition-all duration-700 w-0 shadow-lg shadow-cyan-500/50"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- GAME PLAY AREA CONTAINER -->
+        <main id="game-container" class="flex-1 flex flex-col justify-center my-2">
+            
+            <!-- ========================================== -->
+            <!-- LEVEL 1: DECOMPOSITION (ซ่อมแซมยานอวกาศ) -->
+            <!-- ========================================== -->
+            <div id="level-1" class="level-card space-glass p-5 sm:p-8 rounded-3xl space-y-6 text-center">
+                <div class="space-y-2">
+                    <span class="inline-block px-3 py-1 bg-cyan-500/20 border border-cyan-400 text-cyan-300 rounded-full text-xs font-heading font-bold">
+                        ด่านที่ 1: Decomposition (การแบ่งย่อยปัญหา)
+                    </span>
+                    <h2 class="font-heading font-bold text-xl sm:text-2xl text-white">
+                        🛠️ ภารกิจ: ซ่อมแซมยานอวกาศกู้ภัย
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto">
+                        ยานอวกาศได้รับความเสียหายหนัก! การซ่อมพร้อมกันทั้งหมดนั้นยากเกินไป <br class="hidden sm:inline">
+                        <strong class="text-cyan-300">แนวคิด:</strong> ให้ <span class="underline underline-offset-4 decoration-cyan-400">แบ่งย่อยปัญหาใหญ่</span> ออกเป็นส่วนเล็กๆ แล้วคลิกซ่อมทีละจุด (3 จุด)
+                    </p>
+                </div>
+
+                <!-- Spaceship Interactive Canvas/Illustration -->
+                <div class="relative w-full max-w-md mx-auto aspect-video bg-slate-950/80 rounded-2xl border-2 border-blue-500/30 overflow-hidden flex items-center justify-center p-4">
+                    <!-- Spaceship Base Graphic -->
+                    <div class="relative w-64 h-36 flex items-center justify-center animate-float">
+                        <!-- Rocket Body SVG -->
+                        <svg class="w-full h-full drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]" viewBox="0 0 200 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 50 L50 20 L150 30 L190 50 L150 70 L50 80 Z" fill="#1e293b" stroke="#3b82f6" stroke-width="3"/>
+                            <circle cx="130" cy="50" r="12" fill="#06b6d4" stroke="#e0f2fe" stroke-width="2"/>
+                            <!-- Wing Left -->
+                            <path d="M70 25 L40 5 L90 25 Z" fill="#3b82f6"/>
+                            <!-- Wing Right -->
+                            <path d="M70 75 L40 95 L90 75 Z" fill="#3b82f6"/>
+                        </svg>
+
+                        <!-- HOTSPOT 1: Engine (เครื่องยนต์) -->
+                        <button id="l1-part-engine" onclick="repairPart('engine')" class="absolute left-2 top-12 p-2 rounded-full bg-red-500/80 border-2 border-red-300 hover:scale-125 transition active:scale-95 text-white text-lg animate-bounce shadow-lg shadow-red-500/80">
+                            <i class="fa-solid fa-fire-flame-curved"></i>
+                        </button>
+
+                        <!-- HOTSPOT 2: Comm System (ระบบสื่อสาร) -->
+                        <button id="l1-part-comm" onclick="repairPart('comm')" class="absolute top-2 right-16 p-2 rounded-full bg-red-500/80 border-2 border-red-300 hover:scale-125 transition active:scale-95 text-white text-lg animate-bounce shadow-lg shadow-red-500/80">
+                            <i class="fa-solid fa-tower-cell"></i>
+                        </button>
+
+                        <!-- HOTSPOT 3: Wing (ปีกยาน) -->
+                        <button id="l1-part-wing" onclick="repairPart('wing')" class="absolute bottom-1 left-20 p-2 rounded-full bg-red-500/80 border-2 border-red-300 hover:scale-125 transition active:scale-95 text-white text-lg animate-bounce shadow-lg shadow-red-500/80">
+                            <i class="fa-solid fa-burst"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Progress -->
+                <div class="inline-flex items-center gap-2 bg-slate-900/90 border border-slate-700 px-4 py-2 rounded-xl text-xs sm:text-sm">
+                    <span class="text-slate-400">ความคืบหน้าการซ่อม:</span>
+                    <span id="l1-progress-text" class="font-heading font-bold text-cyan-400">0/3 จุด</span>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- LEVEL 2: ABSTRACTION (ค้นหาสัญญาณ SOS) -->
+            <!-- ========================================== -->
+            <div id="level-2" class="level-card space-glass p-5 sm:p-8 rounded-3xl space-y-6 text-center hidden">
+                <div class="space-y-2">
+                    <span class="inline-block px-3 py-1 bg-purple-500/20 border border-purple-400 text-purple-300 rounded-full text-xs font-heading font-bold">
+                        ด่านที่ 2: Abstraction (การคิดเชิงนามธรรม)
+                    </span>
+                    <h2 class="font-heading font-bold text-xl sm:text-2xl text-white">
+                        📡 ภารกิจ: ค้นหาสัญญาณขอความช่วยเหลือ (SOS)
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto">
+                        มีสัญญาณวิทยุลอยมาปะปนกับขยะอวกาศและโฆษณา! <br>
+                        <strong class="text-purple-300">แนวคิด:</strong> คัดแยก <span class="underline underline-offset-4 decoration-purple-400">เฉพาะข้อมูลที่สำคัญ</span> ต่อการกู้ภัย (พิกัดดาว + โค้ด SOS) และตัดข้อมูลที่ไม่จำเป็นทิ้ง
+                    </p>
+                </div>
+
+                <!-- Signal Cards Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto">
+                    <button onclick="selectSignal(this, true)" class="signal-card p-4 rounded-2xl bg-slate-900/80 border-2 border-slate-700 hover:border-purple-400 hover:bg-purple-950/30 transition text-left space-y-1">
+                        <div class="text-purple-400 text-xs font-heading font-bold flex justify-between">
+                            <span>📡 สัญญาณ A</span>
+                            <i class="fa-solid fa-location-dot"></i>
+                        </div>
+                        <div class="font-heading font-extrabold text-white text-base">พิกัดดาว: 13.75, 100.50</div>
+                        <p class="text-[11px] text-slate-400">ตำแหน่งที่ตั้งยานอพยพขัดข้อง</p>
+                    </button>
+
+                    <button onclick="selectSignal(this, false)" class="signal-card p-4 rounded-2xl bg-slate-900/80 border-2 border-slate-700 hover:border-purple-400 hover:bg-purple-950/30 transition text-left space-y-1">
+                        <div class="text-slate-400 text-xs font-heading font-bold flex justify-between">
+                            <span>📻 สัญญาณ B</span>
+                            <i class="fa-solid fa-music"></i>
+                        </div>
+                        <div class="font-heading font-extrabold text-white text-base">เพลงฮิตเอเลี่ยน 2026</div>
+                        <p class="text-[11px] text-slate-400">รายการวิทยุบันเทิงอวกาศ</p>
+                    </button>
+
+                    <button onclick="selectSignal(this, false)" class="signal-card p-4 rounded-2xl bg-slate-900/80 border-2 border-slate-700 hover:border-purple-400 hover:bg-purple-950/30 transition text-left space-y-1">
+                        <div class="text-slate-400 text-xs font-heading font-bold flex justify-between">
+                            <span>🛸 สัญญาณ C</span>
+                            <i class="fa-solid fa-rectangle-ad"></i>
+                        </div>
+                        <div class="font-heading font-extrabold text-white text-base">โฆษณาขายตั๋วดาวอังคาร</div>
+                        <p class="text-[11px] text-slate-400">ลดราคาพิเศษ 50% วันนี้เท่านั้น</p>
+                    </button>
+
+                    <button onclick="selectSignal(this, true)" class="signal-card p-4 rounded-2xl bg-slate-900/80 border-2 border-slate-700 hover:border-purple-400 hover:bg-purple-950/30 transition text-left space-y-1">
+                        <div class="text-purple-400 text-xs font-heading font-bold flex justify-between">
+                            <span>🆘 สัญญาณ D</span>
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div class="font-heading font-extrabold text-white text-base">รหัส SOS: HELP-9942</div>
+                        <p class="text-[11px] text-slate-400">รหัสฉุกเฉินยืนยันภัยพิบัติ</p>
+                    </button>
+                </div>
+
+                <div id="l2-feedback" class="text-xs sm:text-sm font-heading font-bold text-cyan-300 h-6">
+                    เลือกการ์ดข้อมูลสำคัญ 2 ใบที่จำเป็นสำหรับการกู้ภัย
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- LEVEL 3: PATTERN RECOGNITION (จัดกลุ่มเอเลี่ยน) -->
+            <!-- ========================================== -->
+            <div id="level-3" class="level-card space-glass p-5 sm:p-8 rounded-3xl space-y-6 text-center hidden">
+                <div class="space-y-2">
+                    <span class="inline-block px-3 py-1 bg-pink-500/20 border border-pink-400 text-pink-300 rounded-full text-xs font-heading font-bold">
+                        ด่านที่ 3: Pattern Recognition (การหารูปแบบ)
+                    </span>
+                    <h2 class="font-heading font-bold text-xl sm:text-2xl text-white">
+                        👾 ภารกิจ: คัดแยกเอเลี่ยนขึ้นยานกู้ภัย
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto">
+                        ยานกู้ภัยหมายเลข 1 กำหนดไว้สำหรับเอเลี่ยนที่มีลักษณะเฉพาะ! <br>
+                        <strong class="text-pink-300">แนวคิด:</strong> สังเกต <span class="underline underline-offset-4 decoration-pink-400">รูปแบบความเหมือน/แตกต่าง</span> แล้วคลิกเลือกเฉพาะเอเลี่ยนที่มี <strong class="text-yellow-300">"ตาเดียว" ทั้ง 2 ตัว</strong> ขึ้นยาน
+                    </p>
+                </div>
+
+                <!-- Aliens Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
+                    <!-- Alien 1: 1 Eye -->
+                    <button onclick="toggleAlien(this, 1)" class="alien-btn p-4 rounded-2xl bg-slate-900/80 border-2 border-slate-700 hover:border-pink-400 transition flex flex-col items-center gap-2 group">
+                        <div class="text-4xl group-hover:scale-110 transition">👁️👽</div>
+                        <span class="font-heading font-bold text-xs text-slate-200">สายพันธุ์ Alpha</span>
+                        <span class="text-[10px] text-pink-300 bg-pink-950/60 px-2 py-0.5 rounded-full">(ตาเดียว)</span>
+                    </button>
+
+                    <!-- Alien 2: 3 Eyes -->
+                    <button onclick="toggleAlien(this, 3)" class="alien-btn p-4 rounded-2xl bg-slate-900/80 border-2 border-slate-700 hover:border-pink-400 transition flex flex-col items-center gap-2 group">
+                        <div class="text-4xl group-hover:scale-110 transition">👀👾</div>
+                        <span class="font-heading font-bold text-xs text-slate-200">สายพันธุ์ Beta</span>
+                        <span class="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">(สามตา)</span>
+                    </button>
+
+                    <!-- Alien 3: 1 Eye -->
+                    <button onclick="toggleAlien(this, 1)" class="alien-btn p-4 rounded-2xl bg-slate-900/80 border-2 border-slate-700 hover:border-pink-400 transition flex flex-col items-center gap-2 group">
+                        <div class="text-4xl group-hover:scale-110 transition">👁️🤖</div>
+                        <span class="font-heading font-bold text-xs text-slate-200">สายพันธุ์ Gamma</span>
+                        <span class="text-[10px] text-pink-300 bg-pink-950/60 px-2 py-0.5 rounded-full">(ตาเดียว)</span>
+                    </button>
+
+                    <!-- Alien 4: 3 Eyes -->
+                    <button onclick="toggleAlien(this, 3)" class="alien-btn p-4 rounded-2xl bg-slate-900/80 border-2 border-slate-700 hover:border-pink-400 transition flex flex-col items-center gap-2 group">
+                        <div class="text-4xl group-hover:scale-110 transition">👀🤡</div>
+                        <span class="font-heading font-bold text-xs text-slate-200">สายพันธุ์ Delta</span>
+                        <span class="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">(สามตา)</span>
+                    </button>
+                </div>
+
+                <button onclick="checkAlienSelection()" class="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 active:scale-95 text-white font-heading font-extrabold text-sm rounded-xl shadow-lg shadow-pink-500/30 transition">
+                    ส่งเอเลี่ยนขึ้นยานหมายเลข 1 🚀
+                </button>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- LEVEL 4: ALGORITHM DESIGN (ลงจอดฉุกเฉิน) -->
+            <!-- ========================================== -->
+            <div id="level-4" class="level-card space-glass p-5 sm:p-8 rounded-3xl space-y-6 text-center hidden">
+                <div class="space-y-2">
+                    <span class="inline-block px-3 py-1 bg-yellow-500/20 border border-yellow-400 text-yellow-300 rounded-full text-xs font-heading font-bold">
+                        ด่านที่ 4: Algorithm Design (การออกแบบขั้นตอน)
+                    </span>
+                    <h2 class="font-heading font-bold text-xl sm:text-2xl text-white">
+                        🛬 ภารกิจ: เรียงลำดับขั้นตอนนำยานลงจอด
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto">
+                        ระบบอัตโนมัติต้องการลำดับคำสั่งที่ถูกต้องเพื่อลงจอดอย่างปลอดภัย! <br>
+                        <strong class="text-yellow-300">แนวคิด:</strong> คลิกเลือกปุ่มขั้นตอน <span class="underline underline-offset-4 decoration-yellow-400">ตามลำดับก่อน-หลัง 1 ถึง 4</span>
+                    </p>
+                </div>
+
+                <!-- Sequence Slots Display -->
+                <div class="flex justify-center gap-2 sm:gap-3 my-2">
+                    <div id="slot-1" class="w-16 sm:w-20 h-16 sm:h-20 rounded-2xl bg-slate-900 border-2 border-dashed border-yellow-500/40 flex flex-col items-center justify-center p-1">
+                        <span class="text-[10px] text-yellow-400 font-heading font-bold">ลำดับที่ 1</span>
+                        <span class="slot-text text-xs sm:text-sm font-bold text-white text-center">...</span>
+                    </div>
+                    <div id="slot-2" class="w-16 sm:w-20 h-16 sm:h-20 rounded-2xl bg-slate-900 border-2 border-dashed border-yellow-500/40 flex flex-col items-center justify-center p-1">
+                        <span class="text-[10px] text-yellow-400 font-heading font-bold">ลำดับที่ 2</span>
+                        <span class="slot-text text-xs sm:text-sm font-bold text-white text-center">...</span>
+                    </div>
+                    <div id="slot-3" class="w-16 sm:w-20 h-16 sm:h-20 rounded-2xl bg-slate-900 border-2 border-dashed border-yellow-500/40 flex flex-col items-center justify-center p-1">
+                        <span class="text-[10px] text-yellow-400 font-heading font-bold">ลำดับที่ 3</span>
+                        <span class="slot-text text-xs sm:text-sm font-bold text-white text-center">...</span>
+                    </div>
+                    <div id="slot-4" class="w-16 sm:w-20 h-16 sm:h-20 rounded-2xl bg-slate-900 border-2 border-dashed border-yellow-500/40 flex flex-col items-center justify-center p-1">
+                        <span class="text-[10px] text-yellow-400 font-heading font-bold">ลำดับที่ 4</span>
+                        <span class="slot-text text-xs sm:text-sm font-bold text-white text-center">...</span>
+                    </div>
+                </div>
+
+                <!-- Shuffled Step Buttons to Click -->
+                <div id="algo-buttons-container" class="grid grid-cols-2 gap-3 max-w-md mx-auto">
+                    <!-- Step A -->
+                    <button onclick="selectAlgoStep(this, 'กางล้อลงจอด', 1)" class="algo-btn p-3 bg-slate-900/90 border-2 border-slate-700 hover:border-yellow-400 rounded-2xl text-xs sm:text-sm font-heading font-bold text-white transition active:scale-95">
+                        🛞 กางล้อลงจอด
+                    </button>
+                    <!-- Step B -->
+                    <button onclick="selectAlgoStep(this, 'แตะพื้นดาว', 3)" class="algo-btn p-3 bg-slate-900/90 border-2 border-slate-700 hover:border-yellow-400 rounded-2xl text-xs sm:text-sm font-heading font-bold text-white transition active:scale-95">
+                        🏔️ แตะพื้นดาว
+                    </button>
+                    <!-- Step C -->
+                    <button onclick="selectAlgoStep(this, 'ลดความเร็ว', 2)" class="algo-btn p-3 bg-slate-900/90 border-2 border-slate-700 hover:border-yellow-400 rounded-2xl text-xs sm:text-sm font-heading font-bold text-white transition active:scale-95">
+                        📉 ลดความเร็วยาน
+                    </button>
+                    <!-- Step D -->
+                    <button onclick="selectAlgoStep(this, 'ดับเครื่องยนต์', 4)" class="algo-btn p-3 bg-slate-900/90 border-2 border-slate-700 hover:border-yellow-400 rounded-2xl text-xs sm:text-sm font-heading font-bold text-white transition active:scale-95">
+                        🛑 ดับเครื่องยนต์
+                    </button>
+                </div>
+
+                <button onclick="resetAlgoSequence()" class="text-xs text-slate-400 hover:text-white underline">
+                    <i class="fa-solid fa-rotate-right"></i> รีเซ็ตลำดับใหม่
+                </button>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- LEVEL 5: DEBUGGING (ปลดล็อกประตูช่วยชีวิต) -->
+            <!-- ========================================== -->
+            <div id="level-5" class="level-card space-glass p-5 sm:p-8 rounded-3xl space-y-6 text-center hidden">
+                <div class="space-y-2">
+                    <span class="inline-block px-3 py-1 bg-red-500/20 border border-red-400 text-red-300 rounded-full text-xs font-heading font-bold">
+                        ด่านที่ 5: Debugging (การแก้ไขจุดบกพร่อง)
+                    </span>
+                    <h2 class="font-heading font-bold text-xl sm:text-2xl text-white">
+                        🔓 ภารกิจ: แก้ไขโค้ดประตูช่วยชีวิต
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto">
+                        ประตูห้องกู้ภัยติดล็อกเพราะคำสั่งโปรแกรม <span class="text-red-400 font-bold">มีบั๊ก (Bug)!</span> <br>
+                        <strong class="text-red-300">แนวคิด:</strong> ตรวจสอบหาส่วนที่ผิดพลาดและเลือกชุดคำสั่งที่แก้ไขถูกต้องแล้ว
+                    </p>
+                </div>
+
+                <!-- Buggy Code Box Display -->
+                <div class="bg-slate-950 p-4 rounded-2xl border-2 border-red-500/50 max-w-md mx-auto text-left space-y-2 relative overflow-hidden">
+                    <div class="flex justify-between items-center text-xs font-mono text-red-400 border-b border-slate-800 pb-2">
+                        <span><i class="fa-solid fa-bug text-red-500 animate-pulse"></i> ERROR CODE #505</span>
+                        <span class="bg-red-950 px-2 py-0.5 rounded text-[10px]">ลำดับผิดพลาด!</span>
+                    </div>
+                    <div class="font-mono text-xs sm:text-sm text-slate-300 space-y-1">
+                        <p class="text-slate-500">1. ใส่รหัสผ่านเข้าห้อง</p>
+                        <p class="text-red-400 font-bold">2. เปิดประตูห้องกู้ภัย ⚠️ (ประตูยังล็อกอยู่!)</p>
+                        <p class="text-slate-500">3. ตรวจสอบลายนิ้วมือ</p>
+                    </div>
+                </div>
+
+                <!-- Multiple Choice Fixes -->
+                <div class="space-y-2 max-w-md mx-auto text-left">
+                    <p class="text-xs font-heading font-bold text-cyan-300 text-center">เลือกลำดับโค้ดที่ถูกต้องเพื่อ Debug แก้ไขประตู:</p>
+                    
+                    <button onclick="answerDebug(false, this)" class="debug-opt w-full p-3.5 bg-slate-900/90 border border-slate-700 hover:border-cyan-400 rounded-2xl text-xs sm:text-sm font-sarabun text-slate-200 transition">
+                        <strong>ตัวเลือก A:</strong> 1. เปิดประตู -> 2. ใส่รหัสผ่าน -> 3. ตรวจสอบลายนิ้วมือ
+                    </button>
+
+                    <button onclick="answerDebug(true, this)" class="debug-opt w-full p-3.5 bg-slate-900/90 border border-slate-700 hover:border-cyan-400 rounded-2xl text-xs sm:text-sm font-sarabun text-slate-200 transition">
+                        <strong>ตัวเลือก B (ถูกต้อง):</strong> 1. ตรวจสอบลายนิ้วมือ -> 2. ใส่รหัสผ่าน -> 3. เปิดประตู
+                    </button>
+
+                    <button onclick="answerDebug(false, this)" class="debug-opt w-full p-3.5 bg-slate-900/90 border border-slate-700 hover:border-cyan-400 rounded-2xl text-xs sm:text-sm font-sarabun text-slate-200 transition">
+                        <strong>ตัวเลือก C:</strong> 1. ใส่รหัสผ่าน -> 2. เปิดประตู -> 3. ตรวจสอบลายนิ้วมือ
+                    </button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- POPUP MODAL: COMPUTATIONAL THINKING KNOWLEDGE SUMMARY -->
+        <div id="modal-ct-summary" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+            <div class="space-glass-gold max-w-lg w-full rounded-3xl p-6 sm:p-8 border-2 border-yellow-400/50 space-y-5 text-center shadow-2xl relative">
+                
+                <div class="w-16 h-16 bg-yellow-500/20 border-2 border-yellow-400 text-yellow-400 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-lg shadow-yellow-500/30 animate-bounce">
+                    <i id="ct-icon" class="fa-solid fa-brain"></i>
+                </div>
+
+                <div class="space-y-2">
+                    <span id="ct-badge" class="bg-yellow-500/20 text-yellow-300 text-xs font-heading font-extrabold px-3 py-1 rounded-full border border-yellow-400/40">
+                        การเรียนรู้แนวคิดเชิงคำนวณ
+                    </span>
+                    <h3 id="ct-title" class="font-heading font-extrabold text-xl sm:text-2xl text-white">
+                        สรุปความรู้: Decomposition
+                    </h3>
+                </div>
+
+                <div id="ct-desc" class="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 text-xs sm:text-sm text-slate-200 text-left leading-relaxed font-sarabun">
+                    <!-- Dynamic Summary Text -->
+                </div>
+
+                <button onclick="nextLevel()" class="w-full py-3.5 bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 active:scale-98 font-heading font-extrabold text-slate-950 text-sm sm:text-base rounded-2xl shadow-xl shadow-yellow-500/20 transition flex items-center justify-center gap-2">
+                    <span>ลุยต่อด่านถัดไป</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- POPUP MODAL: MISSION COMPLETE VICTORY -->
+        <div id="modal-victory" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-lg flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-500">
+            <div class="space-glass rounded-3xl max-w-lg w-full p-6 sm:p-8 border-2 border-cyan-400/80 shadow-2xl text-center space-y-6">
+                
+                <div class="w-20 h-20 bg-gradient-to-tr from-cyan-500 to-purple-600 text-white rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-xl shadow-cyan-500/40 animate-pulse">
+                    🏆
+                </div>
+
+                <div class="space-y-2">
+                    <h2 class="font-heading text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-200 to-purple-300">
+                        ภารกิจกู้ภัยสำเร็จสมบูรณ์!
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-300">
+                        คุณคือสุดยอดนักกู้ภัยอวกาศผู้เชี่ยวชาญ <strong class="text-cyan-300">แนวคิดเชิงคำนวณ (Computational Thinking)</strong>
+                    </p>
+                </div>
+
+                <!-- CT Mastery Checklist Summary -->
+                <div class="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 text-left text-xs space-y-2">
+                    <div class="font-heading font-bold text-cyan-300 flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-circle-check text-cyan-400"></i> ทักษะที่คุณได้ฝึกฝนในภารกิจนี้:
+                    </div>
+                    <ul class="space-y-1.5 text-slate-300 list-disc list-inside font-sarabun">
+                        <li><strong class="text-white">Decomposition:</strong> แตกปัญหาซ่อมยานเป็น 3 ส่วนย่อย</li>
+                        <li><strong class="text-white">Abstraction:</strong> เลือกเฉพาะพิกัดและรหัส SOS ที่สำคัญ</li>
+                        <li><strong class="text-white">Pattern Recognition:</strong> สังเกตและจัดกลุ่มเอเลี่ยนตาเดียว</li>
+                        <li><strong class="text-white">Algorithm Design:</strong> เรียงลำดับคำสั่งลงจอด 4 ขั้นตอน</li>
+                        <li><strong class="text-white">Debugging:</strong> ตรวจหาสุดยอดบั๊กและแก้ไขประตูช่วยชีวิต</li>
+                    </ul>
+                </div>
+
+                <button onclick="restartGame()" class="w-full py-3.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 active:scale-98 font-heading font-extrabold text-white text-base rounded-2xl shadow-xl shadow-cyan-500/30 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>เล่นใหม่อีกครั้ง</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* ======================================================================
+         * 1. STATE MANAGEMENT & AUDIO SYNTHESIZER
+         * ====================================================================== */
+        let currentLevel = 1;
+        let l1RepairedCount = 0;
+        let l2SelectedSignals = [];
+        let l3SelectedAliens = [];
+        let l4SelectedSequence = [];
+
+        // Simple Web Audio API Synth (Zero external audio file dependency)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'success') {
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+        }
+
+        /* ======================================================================
+         * 2. BACKGROUND STAR PARTICLES GENERATOR
+         * ====================================================================== */
+        function createStars() {
+            const container = document.getElementById('stars-container');
+            const starCount = 60;
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 3 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.setProperty('--duration', `${Math.random() * 3 + 2}s`);
+                container.appendChild(star);
+            }
+        }
+        createStars();
+
+        /* ======================================================================
+         * 3. HUD PROGRESS UPDATE
+         * ====================================================================== */
+        const CT_TITLES = [
+            "ด่านที่ 1/5: Decomposition",
+            "ด่านที่ 2/5: Abstraction",
+            "ด่านที่ 3/5: Pattern Recognition",
+            "ด่านที่ 4/5: Algorithm Design",
+            "ด่านที่ 5/5: Debugging"
+        ];
+
+        function updateHUD(energyPercent) {
+            document.getElementById('hud-level-title').innerText = CT_TITLES[currentLevel - 1];
+            document.getElementById('hud-energy-text').innerText = `พลังงาน ${energyPercent}%`;
+            document.getElementById('hud-energy-bar').style.width = `${energyPercent}%`;
+        }
+
+        /* ======================================================================
+         * 4. LEVEL 1: DECOMPOSITION LOGIC
+         * ====================================================================== */
+        function repairPart(partId) {
+            playSound('click');
+            const btn = document.getElementById(`l1-part-${partId}`);
+            if (btn && !btn.disabled) {
+                btn.disabled = true;
+                btn.classList.remove('bg-red-500/80', 'animate-bounce');
+                btn.classList.add('bg-emerald-500/90', 'border-emerald-300', 'scale-110');
+                btn.innerHTML = `<i class="fa-solid fa-check"></i>`;
+
+                l1RepairedCount++;
+                document.getElementById('l1-progress-text').innerText = `${l1RepairedCount}/3 จุด`;
+
+                if (l1RepairedCount === 3) {
+                    playSound('success');
+                    setTimeout(() => {
+                        showCTSummary(
+                            "🧩 Decomposition (การแบ่งย่อยปัญหา)",
+                            "fa-scissors",
+                            "<strong> Decompostion </strong> คือการแยกปัญหาใหญ่ที่ซับซ้อนออกเป็นปัญหาย่อยๆ ที่จัดการได้ง่ายขึ้น เช่น ในชีวิตประจำวัน เมื่อต้องการทำความสะอาดห้องนอน เราสามารถแบ่งย่อยเป็น 1. จัดเตียง 2. กวาดพื้น 3. เช็ดโต๊ะ ทำให้แก้ปัญหาได้สำเร็จอย่างมีระบบ!"
+                        );
+                    }, 600);
+                }
+            }
+        }
+
+        /* ======================================================================
+         * 5. LEVEL 2: ABSTRACTION LOGIC
+         * ====================================================================== */
+        function selectSignal(button, isImportant) {
+            playSound('click');
+            if (button.classList.contains('border-cyan-400')) {
+                // Deselect
+                button.classList.remove('border-cyan-400', 'bg-cyan-950/50');
+                button.classList.add('border-slate-700', 'bg-slate-900/80');
+                l2SelectedSignals = l2SelectedSignals.filter(b => b !== button);
+            } else {
+                // Select
+                if (l2SelectedSignals.length >= 2) return;
+                button.classList.remove('border-slate-700', 'bg-slate-900/80');
+                button.classList.add('border-cyan-400', 'bg-cyan-950/50');
+                l2SelectedSignals.push(button);
+            }
+
+            // Check if both selected are correct
+            if (l2SelectedSignals.length === 2) {
+                const allCorrect = l2SelectedSignals.every(b => b.getAttribute('onclick').includes('true'));
+                if (allCorrect) {
+                    playSound('success');
+                    document.getElementById('l2-feedback').innerHTML = `<span class="text-emerald-400"><i class="fa-solid fa-circle-check"></i> ถูกต้อง! คัดกรองเฉพาะพิกัดดาวและรหัส SOS สำเร็จ</span>`;
+                    setTimeout(() => {
+                        showCTSummary(
+                            "🎯 Abstraction (การคิดเชิงนามธรรม)",
+                            "fa-filter",
+                            "<strong> Abstraction </strong> คือการคัดเลือกเฉพาะข้อมูลที่สำคัญและจำเป็นต่อการแก้ปัญหา แล้วตัดรายละเอียดที่ไม่เกี่ยวข้องออกไป เช่น แผนที่รถไฟฟ้า ที่แสดงเฉพาะสถานีและสายรถไฟฟ้า โดยไม่ต้องบอกรายละเอียดต้นไม้หรืออาคารข้างทาง"
+                        );
+                    }, 800);
+                } else {
+                    playSound('error');
+                    document.getElementById('l2-feedback').innerHTML = `<span class="text-red-400"><i class="fa-solid fa-triangle-exclamation"></i> สัญญาณบางอันเป็นขยะอวกาศ ลองเลือกใหม่อีกครั้ง!</span>`;
+                }
+            }
+        }
+
+        /* ======================================================================
+         * 6. LEVEL 3: PATTERN RECOGNITION LOGIC
+         * ====================================================================== */
+        function toggleAlien(btn, eyeCount) {
+            playSound('click');
+            if (btn.classList.contains('border-pink-500')) {
+                btn.classList.remove('border-pink-500', 'bg-pink-950/60');
+                btn.classList.add('border-slate-700', 'bg-slate-900/80');
+                l3SelectedAliens = l3SelectedAliens.filter(item => item.btn !== btn);
+            } else {
+                if (l3SelectedAliens.length >= 2) return;
+                btn.classList.remove('border-slate-700', 'bg-slate-900/80');
+                btn.classList.add('border-pink-500', 'bg-pink-950/60');
+                l3SelectedAliens.push({ btn, eyeCount });
+            }
+        }
+
+        function checkAlienSelection() {
+            if (l3SelectedAliens.length !== 2) {
+                playSound('error');
+                alert("กรุณาเลือกเอเลี่ยนให้ครบ 2 ตัวสำหรับยานหมายเลข 1");
+                return;
+            }
+
+            const isPatternCorrect = l3SelectedAliens.every(a => a.eyeCount === 1);
+            if (isPatternCorrect) {
+                playSound('success');
+                showCTSummary(
+                    "🔍 Pattern Recognition (การหารูปแบบ)",
+                    "fa-shapes",
+                    "<strong> Pattern Recognition </strong> คือการสังเกตรูปแบบ ความเหมือน ความต่าง หรือแนวโน้มของสิ่งต่างๆ เช่น การจัดหมวดหมู่หนังสือในห้องโดนดูตามประเภท หรือการจดจำว่าเมื่อเมฆมืดครึ้มมักจะมีฝนตก ช่วยให้เราคาดเดาและแก้ปัญหาได้รวดเร็วขึ้น"
+                );
+            } else {
+                playSound('error');
+                alert("รูปแบบยังไม่ถูกต้อง! ยานหมายเลข 1 ต้องการเอเลี่ยนที่มี 'ตาเดียว' ทั้งคู่ครับ");
+            }
+        }
+
+        /* ======================================================================
+         * 7. LEVEL 4: ALGORITHM DESIGN LOGIC
+         * ====================================================================== */
+        function selectAlgoStep(btn, stepName, correctOrder) {
+            if (btn.disabled) return;
+            playSound('click');
+
+            const currentStepIdx = l4SelectedSequence.length + 1;
+            if (currentStepIdx > 4) return;
+
+            btn.disabled = true;
+            btn.classList.add('opacity-40');
+
+            const slot = document.getElementById(`slot-${currentStepIdx}`);
+            slot.querySelector('.slot-text').innerText = stepName;
+            slot.classList.remove('border-dashed', 'border-yellow-500/40');
+            slot.classList.add('border-solid', 'border-yellow-400', 'bg-yellow-950/40');
+
+            l4SelectedSequence.push({ stepName, correctOrder });
+
+            if (l4SelectedSequence.length === 4) {
+                // Check if ordered 1, 2, 3, 4
+                const isCorrect = l4SelectedSequence.every((item, idx) => item.correctOrder === (idx + 1));
+                if (isCorrect) {
+                    playSound('success');
+                    setTimeout(() => {
+                        showCTSummary(
+                            "📝 Algorithm Design (การออกแบบขั้นตอน)",
+                            "fa-list-ol",
+                            "<strong> Algorithm Design </strong> คือการวางแผนออกแบบลำดับขั้นตอนในการแก้ปัญหาทีละสเต็ปอย่างชัดเจน เช่น สูตรการทำอาหาร หรือขั้นตอนการแปรงฟัน หากทำสลับขั้นตอน ผลลัพธ์ก็จะไม่ถูกต้อง ยานจึงลงจอดไม่ได้นั่นเอง!"
+                        );
+                    }, 600);
+                } else {
+                    playSound('error');
+                    setTimeout(() => {
+                        alert("ลำดับขั้นตอนไม่ถูกต้อง! ยานอาจตกได้ ลองกดรีเซ็ตแล้วเรียงลำดับใหม่นะครับ");
+                        resetAlgoSequence();
+                    }, 300);
+                }
+            }
+        }
+
+        function resetAlgoSequence() {
+            l4SelectedSequence = [];
+            for (let i = 1; i <= 4; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                slot.querySelector('.slot-text').innerText = "...";
+                slot.classList.remove('border-solid', 'border-yellow-400', 'bg-yellow-950/40');
+                slot.classList.add('border-dashed', 'border-yellow-500/40');
+            }
+            document.querySelectorAll('.algo-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('opacity-40');
+            });
+        }
+
+        /* ======================================================================
+         * 8. LEVEL 5: DEBUGGING LOGIC
+         * ====================================================================== */
+        function answerDebug(isCorrect, btn) {
+            if (isCorrect) {
+                playSound('success');
+                btn.classList.remove('bg-slate-900/90', 'border-slate-700');
+                btn.classList.add('bg-emerald-950/80', 'border-2', 'border-emerald-400', 'text-emerald-200');
+
+                setTimeout(() => {
+                    showCTSummary(
+                        "🐞 Debugging (การแก้ไขจุดบกพร่อง)",
+                        "fa-bug-slash",
+                        "<strong> Debugging </strong> คือกระบวนการค้นหาและแก้ไขข้อผิดพลาด (Bug) ในโค้ดหรือขั้นตอนการทำงาน ในชีวิตจริงเหมือนกับการตรวจทานคำตอบข้อสอบแล้วพบจุดที่คิดเลขผิด จึงลงมือแก้ไขให้ถูกต้องสมบูรณ์!"
+                    );
+                }, 600);
+            } else {
+                playSound('error');
+                btn.classList.remove('bg-slate-900/90', 'border-slate-700');
+                btn.classList.add('bg-red-950/80', 'border-2', 'border-red-500', 'text-red-200');
+                setTimeout(() => {
+                    alert("ลำดับนี้ยังมีบั๊ก! ประตูยังเปิดไม่ได้ ลองพิจารณาคำสั่งใหม่อีกครั้งครับ");
+                }, 200);
+            }
+        }
+
+        /* ======================================================================
+         * 9. MODAL & LEVEL TRANSITIONS
+         * ====================================================================== */
+        function showCTSummary(title, iconClass, descriptionHtml) {
+            document.getElementById('ct-title').innerText = title;
+            document.getElementById('ct-icon').className = `fa-solid ${iconClass}`;
+            document.getElementById('ct-desc').innerHTML = descriptionHtml;
+
+            const modal = document.getElementById('modal-ct-summary');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.classList.add('opacity-100');
+        }
+
+        function nextLevel() {
+            playSound('click');
+            const modal = document.getElementById('modal-ct-summary');
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+
+            // Hide Current Level Card
+            document.getElementById(`level-${currentLevel}`).classList.add('hidden');
+
+            currentLevel++;
+
+            if (currentLevel <= 5) {
+                // Show Next Level
+                document.getElementById(`level-${currentLevel}`).classList.remove('hidden');
+                updateHUD((currentLevel - 1) * 20);
+            } else {
+                // Mission Complete Victory
+                updateHUD(100);
+                const victoryModal = document.getElementById('modal-victory');
+                victoryModal.classList.remove('opacity-0', 'pointer-events-none');
+                victoryModal.classList.add('opacity-100');
+            }
+        }
+
+        function restartGame() {
+            playSound('click');
+            location.reload();
+        }
+
+        // Initialize Level 1 HUD
+        updateHUD(0);
+    </script>
+</body>
+</html>
